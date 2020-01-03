@@ -1,0 +1,41 @@
+﻿更改Swap配置（可选）
+
+有几个涉及swap的选项可能会影响到系统的性能表现。大部分情况下这些选项是可选的
+
+ Swappiness 
+
+swappiness参数决定了系统将数据从内存交换到swap空间的频率，数值设置在0到100之间，代表系统将数据从内存交换到swap空间的力度。
+
+该数值越接近于0，系统越倾向于不进行swap，仅在必要的时候进行swap操作。由于swap要比内存慢很多，因此减少对swap的依赖意味着更高的系统性能。
+
+该数值越接近于100，系统越倾向于多进行swap。有些应用的内存使用习惯更适合于这种情况，这也于服务器的用途有关。
+
+输入如下命令查看当前的swappiness数值：cat /proc/sys/vm/swappiness  #30
+
+CentOS 7默认设置了30的swappiness，这对于大部分桌面系统和本地服务器是比较中庸的数值。对于VPS系统而言，可能接近于0的值是更加合适的。
+
+使用sysctl命令可以修改swappiness。比如将swappiness设为10：sudo sysctl vm.swappiness=10
+
+本次修改将一直生效到下次重启前。如果希望永久修改该数值，则需要编辑sysctl配置文件：
+
+sudo vim /etc/sysctl.conf
+将以下内容粘贴到文件末尾：
+vm.swappiness = 100
+编辑完成后，保存退出，之后服务器每次重启的时候会将swappiness设置为该值。
+
+ 缓存压力（Cache Pressure ）
+
+另一个可以考虑更改的配置项是vfs_cache_pressure，该配置项涉及特殊文件系统元文件条目的存储。对此类信息的频繁读取是非常消耗性能的，所以延长其在缓存的保存时间可以提升系统的性能。
+
+通过proc文件系统查看缓存压力的当前设定值：cat /proc/sys/vm/vfs_cache_pressure  #100
+
+这个数值是比较高的，意味着系统从缓存中移除inode信息的速度比较快。一个保守一些的数值是50，使用sysctl命令进行设置：
+
+sudo sysctl vm.vfs_cache_pressure=50
+
+这条命令仅在重启前有效。要让该设置永久有效，需要编辑sysctl配置文件：
+
+sudo vim /etc/sysctl.conf
+在文件末尾添加如下内容：
+vm.vfs_cache_pressure = 50
+保存退出，服务器就会在每次重启后都自动将缓存压力设置为50了。
